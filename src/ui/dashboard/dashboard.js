@@ -216,6 +216,20 @@ function setupEventListeners() {
   });
 }
 
+async function sendMessageWithFallback(tabId, message) {
+  try {
+    if (tabId) {
+      return await chrome.tabs.sendMessage(tabId, message);
+    }
+  } catch (error) {
+    if (!error.message || !error.message.includes('Receiving end does not exist')) {
+      throw error;
+    }
+  }
+
+  return chrome.runtime.sendMessage(message);
+}
+
 async function handleBatchConfirmation(data) {
   const continueDownload = confirm(
     `Downloaded ${data.downloaded} images so far.\n\n` +
@@ -314,8 +328,8 @@ async function startPagination() {
     }
 
     isPaginating = true;
-    
-    await chrome.tabs.sendMessage(tabs[0].id, {
+
+    await sendMessageWithFallback(tabs[0].id, {
       type: MESSAGE_TYPES.CORE_PAGINATION_START,
       method: settings.paginationMethod
     });
@@ -349,7 +363,7 @@ async function pausePagination() {
       return;
     }
 
-    await chrome.tabs.sendMessage(tabs[0].id, {
+    await sendMessageWithFallback(tabs[0].id, {
       type: MESSAGE_TYPES.CORE_PAGINATION_PAUSE
     });
 
@@ -376,7 +390,7 @@ async function resumePagination() {
       return;
     }
 
-    await chrome.tabs.sendMessage(tabs[0].id, {
+    await sendMessageWithFallback(tabs[0].id, {
       type: MESSAGE_TYPES.CORE_PAGINATION_RESUME
     });
 
@@ -403,7 +417,7 @@ async function cancelPagination() {
       return;
     }
 
-    await chrome.tabs.sendMessage(tabs[0].id, {
+    await sendMessageWithFallback(tabs[0].id, {
       type: MESSAGE_TYPES.CORE_PAGINATION_CANCEL
     });
 
@@ -423,7 +437,7 @@ async function stopPagination() {
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0] && isContentScriptCompatibleUrl(tabs[0].url)) {
-      await chrome.tabs.sendMessage(tabs[0].id, {
+      await sendMessageWithFallback(tabs[0].id, {
         type: MESSAGE_TYPES.CORE_PAGINATION_STOP
       });
     }
