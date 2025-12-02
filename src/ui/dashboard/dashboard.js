@@ -117,12 +117,6 @@ function setupEventListeners() {
     saveSettings();
   });
 
-  document.getElementById('filenamePattern').addEventListener('input', (e) => {
-    settings.filenamePattern = e.target.value;
-    updateFilenameExample();
-    saveSettings();
-  });
-
   document.querySelectorAll('.token-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const input = document.getElementById('filenamePattern');
