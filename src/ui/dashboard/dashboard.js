@@ -14,19 +14,37 @@ let settings = {
   exportFields: ['filename', 'fileUrl', 'dimensions', 'sourcePage']
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
+let dashboardInitialized = false;
+
+async function initializeDashboard() {
+  if (dashboardInitialized) {
+    return;
+  }
+
+  dashboardInitialized = true;
+
   console.log('Dashboard initializing...');
-  
+
   toast.initialize();
-  
-  await loadSettings();
-  await loadImages();
-  initializeUI();
-  setupEventListeners();
-  requestGalleryDetection();
-  
-  console.log('Dashboard ready');
-});
+
+  try {
+    await loadSettings();
+    await loadImages();
+    initializeUI();
+    setupEventListeners();
+    requestGalleryDetection();
+
+    console.log('Dashboard ready');
+  } catch (error) {
+    console.error('Error initializing dashboard:', error);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeDashboard);
+} else {
+  initializeDashboard();
+}
 
 async function loadSettings() {
   try {
