@@ -36,6 +36,26 @@ export class MessageRouter {
     });
   }
 
+  async forwardToActiveTab(message, sendResponse) {
+    try {
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tabId = activeTab?.id || this.state.getCurrentTab();
+
+      if (!tabId) {
+        sendResponse({ success: false, error: 'No active tab available for pagination command' });
+        return false;
+      }
+
+      await chrome.tabs.sendMessage(tabId, message);
+      sendResponse({ success: true });
+    } catch (error) {
+      logger.error('Error forwarding pagination command:', error);
+      sendResponse({ success: false, error: error.message });
+    }
+
+    return true;
+  }
+
   handle(message, sender, sendResponse) {
     logger.debug(`Handling message: ${message.type}`);
 
@@ -54,6 +74,26 @@ export class MessageRouter {
 
       if (message.type === MESSAGE_TYPES.CORE_PAGINATION_STATUS) {
         return this.handlePaginationStatus(message, sender, sendResponse);
+      }
+
+      if (!sender.tab && message.type === MESSAGE_TYPES.CORE_PAGINATION_START) {
+        return this.forwardToActiveTab(message, sendResponse);
+      }
+
+      if (!sender.tab && message.type === MESSAGE_TYPES.CORE_PAGINATION_STOP) {
+        return this.forwardToActiveTab(message, sendResponse);
+      }
+
+      if (!sender.tab && message.type === MESSAGE_TYPES.CORE_PAGINATION_PAUSE) {
+        return this.forwardToActiveTab(message, sendResponse);
+      }
+
+      if (!sender.tab && message.type === MESSAGE_TYPES.CORE_PAGINATION_RESUME) {
+        return this.forwardToActiveTab(message, sendResponse);
+      }
+
+      if (!sender.tab && message.type === MESSAGE_TYPES.CORE_PAGINATION_CANCEL) {
+        return this.forwardToActiveTab(message, sendResponse);
       }
 
       if (message.type === MESSAGE_TYPES.CORE_PAGINATION_PAUSE) {
